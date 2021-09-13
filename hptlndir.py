@@ -41,4 +41,5 @@ for person in files:
             adj_lines.append(lines)
         fin.close()
         fout = open(path + "\\" + f_name + ".txt", "w", encoding="utf-8")
+        fout.write('\ufeff')
         fout.writelines(adj_lines)
