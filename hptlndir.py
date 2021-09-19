@@ -27,8 +27,13 @@ for person in files:
     if f_ext == ".xlsx":
         hp = pd.read_excel(path + "\\" + person)
         hp.drop(hp.columns[1], axis=1, inplace=True)
+        while hp.columns.size > 2:
+            hp.drop(hp.columns[2], axis=1, inplace=True)
         for sentence in hp.loc[0]:
-            sentence.rstrip(sentence[-2])
+            try:
+                sentence.rstrip(sentence[-2])
+            except AttributeError:
+                print(sentence)
         hp.to_csv(path + "\\" + f_name + ".txt", header=["[General]",""], index=False, 
                   quoting=csv.QUOTE_NONE, escapechar="|", doublequote=False, sep="|", mode='w')
         fin = open(path + "\\" + f_name + ".txt", "r", encoding="utf-8", errors="ignore")
