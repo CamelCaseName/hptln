@@ -38,9 +38,9 @@ if os.path.exists(args[1]):
     for root, directories, dirfiles in os.walk(path):
         for name in dirfiles:
             files.append(os.path.join(root, name)[len(path) :])
-        for dirs in directories:
-            if not os.path.isdir(tnpath + "\\" + dirs):
-                os.makedirs(tnpath + "\\" + dirs)
+        for rot in root:
+            if not os.path.isdir(tnpath + "\\" + root[len(path) :]):
+                os.makedirs(tnpath + "\\" + root[len(path) :])
 
     if not os.path.isdir(tnpath):
         os.makedirs(tnpath)
