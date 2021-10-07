@@ -30,16 +30,29 @@ except ImportError:
 args = sys.argv  # 0 is the file itself, 1 the deciding factor
 
 if os.path.exists(args[1]):
-    print(f"Converting files in {args[1]}...", end="")
+    print(f"Converting files in {args[1]}")
     path = args[1]
-    files = os.listdir(path)
+    files = []
+    tnpath = path + "\\converted"
+
+    for root, directories, dirfiles in os.walk(path):
+        for name in dirfiles:
+            files.append(os.path.join(root, name)[len(path) :])
+        for dirs in directories:
+            if not os.path.isdir(tnpath + "\\" + dirs):
+                os.makedirs(tnpath + "\\" + dirs)
+
+    if not os.path.isdir(tnpath):
+        os.makedirs(tnpath)
+
     file_counter = 0
+
     for person in files:
-        f_name, f_ext = os.path.splitext(person)
+        f_name, f_ext = os.path.splitext(path + person)
         if f_ext == ".xlsx":
             file_counter += 1
-            print(".")
-            hp = pd.read_excel(path + "\\" + person)
+            print(".", end="")
+            hp = pd.read_excel(path + person)
             hp.drop(hp.columns[1], axis=1, inplace=True)
             while hp.columns.size > 2:
                 hp.drop(hp.columns[2], axis=1, inplace=True)
@@ -48,8 +61,10 @@ if os.path.exists(args[1]):
                     sentence.rstrip(sentence[-2])
                 except AttributeError:
                     print(sentence)
+            f_name, f_ext = os.path.splitext(person)
+            f_name = os.path.join(tnpath + f_name)
             hp.to_csv(
-                path + "\\" + f_name + ".txt",
+                f_name + ".txt",
                 header=["[General]", ""],
                 index=False,
                 quoting=csv.QUOTE_NONE,
@@ -58,9 +73,7 @@ if os.path.exists(args[1]):
                 sep="|",
                 mode="w",
             )
-            fin = open(
-                path + "\\" + f_name + ".txt", "r", encoding="utf-8", errors="ignore"
-            )
+            fin = open(f_name + ".txt", "r", encoding="utf-8", errors="ignore")
             adj_lines = []
             fin.read
             for lines in fin.readlines():
@@ -69,7 +82,7 @@ if os.path.exists(args[1]):
                 lines = re.sub(r"\|\|", "|", lines)
                 adj_lines.append(lines)
             fin.close()
-            fout = open(path + "\\" + f_name + ".txt", "w", encoding="utf-8")
+            fout = open(f_name + ".txt", "w", encoding="utf-8")
             fout.write("\ufeff")
             fout.writelines(adj_lines)
     print(f"\nConverted {file_counter} files!")
@@ -100,12 +113,16 @@ elif len(args) > 2:
     )
     if languages.isin([lang]).any():
         session = HTMLSession()
+        # session.cookies.
         response = session.get(
             "https://crowdin.com/translate/house-party/158/en-de?filter=basic&value=0"
         )
-        if response == "<Response [200]>":
+        if response.status_code == 200:
+            print("Connected to crowdin.com")
             response.html.render()
-            print(response.)
+            print(response.html.html)
+            button = response.html.find("editor_download_button")
+            print(button)
 
 
 else:
