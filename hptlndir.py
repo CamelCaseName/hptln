@@ -5,10 +5,6 @@ import subprocess
 import sys
 import warnings
 
-from pandas.core.series import Series
-
-from requests_html import HTMLSession
-
 # fix imports in case they dont exist
 try:
     import pandas as pd
@@ -16,6 +12,8 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "pandas"])
 finally:
     import pandas as pd
+    from pandas.core.series import Series
+
 try:
     import regex as re
 except ImportError:
@@ -26,6 +24,14 @@ try:
     import openpyxl
 except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl"])
+
+try:
+    from requests_html import HTMLSession
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests_html"])
+finally:
+    from requests_html import HTMLSession
+
 
 args = sys.argv  # 0 is the file itself, 1 the deciding factor
 
