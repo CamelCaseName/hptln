@@ -135,6 +135,10 @@ elif len(args) > 2:
             token = re.findall(r"[\w\d]*(?='>)", html_token)[0]
             # print(login_page.html.html)
             print(f"Your current login token is {token}")
+            headers = {
+                "Referer": "https://crowdin.com/",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
+            }
             payload = {
                 "domain": "",
                 "cname": "",
@@ -145,20 +149,21 @@ elif len(args) > 2:
                 "email_or_login": "hpdownloader",
                 "password": "HousePartyGame",
             }
-            post = session.post(REQUESTURL, data=payload)
+            post = session.post(REQUESTURL, data=payload, headers=headers)
             print("Logging in...")
-            print(post.content)
-            response = session.get(
-                "https://crowdin.com/translate/house-party/158/en-de?filter=basic&value=0",
-                # cookies=cookies,
-            )
-            if response.status_code == 200:
-                print("Login succesful!")
-                response.html.render()
-                # print(response.cookies)
-                # print(response.html.html)
-                button = response.html.find("editor_download_button")
-                print(button)
+            if post.status_code == 200:
+                response = session.get(
+                    "https://crowdin.com/translate/house-party/158/en-de?filter=basic&value=0",
+                )
+                if response.status_code == 200:
+                    print("Login succesful!")
+                    response.html.render()
+                    button = response.html.find("editor_download_button")
+                    print(button)
+            else:
+                print(
+                    f"Crowdin is silly and gives a {post.status_code} because '{post.reason}'"
+                )
 
 
 else:
