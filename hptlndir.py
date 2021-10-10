@@ -31,7 +31,8 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "requests_html"])
 finally:
     from requests_html import HTMLSession
-    import requests
+
+    # import requests
 
 
 args = sys.argv  # 0 is the file itself, 1 the deciding factor
@@ -119,25 +120,32 @@ elif len(args) > 2:
         ]
     )
     if languages.isin([lang]).any():
+        print("Connecting to crowdin.com...")
         session = HTMLSession()
         REQUESTURL = (
             "https://crowdin.com/translate/house-party/158/en-de?filter=basic&value=0"
         )
         LOGINURL = "https://accounts.crowdin.com/login"
-        login_page = session.get(LOGINURL)
+        proxies = {"http": "http://127.0.0.1:8090", "https": "https://127.0.0.1:8080"}
+
+        login_page = session.get(
+            LOGINURL,
+            # proxies=proxies,
+            # # verify=False
+        )
 
         if login_page.status_code == 200:
             print("Connected to crowdin.com")
             print("Snatching Tokens...")
+
             login_page.html.render()
-            html_token: str = str(login_page.html.find("input")[5])
-            # print(html_token)
-            token = re.findall(r"[\w\d]*(?='>)", html_token)[0]
-            # print(login_page.html.html)
+            login_cookies = login_page.cookies
+            token = login_cookies.get("CSRF-TOKEN")
             print(f"Your current login token is {token}")
+
             headers = {
                 "Referer": "https://crowdin.com/",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
+                # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
             }
             payload = {
                 "domain": "",
@@ -149,15 +157,46 @@ elif len(args) > 2:
                 "email_or_login": "hpdownloader",
                 "password": "HousePartyGame",
             }
-            post = session.post(REQUESTURL, data=payload, headers=headers)
+
             print("Logging in...")
-            if post.status_code == 200:
-                response = session.get(
-                    "https://crowdin.com/translate/house-party/158/en-de?filter=basic&value=0",
+            post = session.post(
+                LOGINURL,
+                data=payload,
+                headers=headers,
+                # proxies=proxies,
+                # verify=False,
+                cookies=login_cookies,
+            )
+
+            if post.status_code == 200 or 302:
+                print("Login succesful!")
+                print("Crowdin needs to rember us")
+                # we need to first check the remember me "box"
+                payload = {
+                    "domain": "",
+                    "cname": "",
+                    "continue": "/translate/house-party/186/en-de?filter=basic&value=0",
+                    "locale": "en",
+                    "intended": "/auth/token",
+                    "_token": token,
+                }
+
+                rember_cookies = post.cookies
+
+                response = session.post(
+                    "https://accounts.crowdin.com/remember-me/accept?continue=%2Ftranslate%2Fhouse-party%2F186%2Fen-de%3Ffilter%3Dbasic%26value%3D0",
+                    data=payload,
+                    headers=headers,
+                    # proxies=proxies,
+                    # verify=False,
+                    cookies=rember_cookies,
                 )
-                if response.status_code == 200:
-                    print("Login succesful!")
-                    response.html.render()
+
+                if response.status_code == 200 or 302:
+                    print("Crowdin rembered xD")
+                    print("Beginning downloads now")
+                    response.html.render()  # we need to remember first sometimes
+
                     button = response.html.find("editor_download_button")
                     print(button)
             else:
