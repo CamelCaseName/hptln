@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import warnings
+import json
 
 # fix imports in case they dont exist
 try:
@@ -93,6 +94,7 @@ if os.path.exists(args[1]):
             fout = open(f_name + ".txt", "w", encoding="utf-8")
             fout.write("\ufeff")
             fout.writelines(adj_lines)
+            fout.close()
     print(f"\nConverted {file_counter} files!")
 
 elif len(args) > 2:
@@ -195,14 +197,54 @@ elif len(args) > 2:
                 if response.status_code == 200 or 302:
                     print("Crowdin rembered xD")
                     print("Beginning downloads now")
-                    response.html.render()  # we need to remember first sometimes
 
-                    button = response.html.find("editor_download_button")
-                    print(button)
+                    payload = {
+                        "as_xliff": "",
+                        "task": "",
+                    }
+                    download_cookies = response.cookies
+                    download = session.post(
+                        "https://crowdin.com/backend/project/house-party/de/186/export",
+                        json=payload,
+                        headers=headers,
+                        cookies=download_cookies,
+                    )
+                    if download.status_code == 200:
+                        file_cookies = download.cookies
+                        download_data_url_dict = json.loads(download.html.html)
+                        file_download_url = download_data_url_dict.get("url")
+                        file_download = session.get(
+                            file_download_url, headers=headers, cookies=file_cookies
+                        )
+                        if file_download.status_code == 200:
+                            fout = open(
+                                re.findall(
+                                    r"((\"(\w*|\d*|\s*)+)(\.((xlsx){1})))",
+                                    file_download.headers.get("Content-Disposition"),
+                                )[0][0][1:],
+                                "wb",
+                            )
+                            fout.write(file_download.content)
+                        else:
+                            print(
+                                f"Crowdin is silly and gives a {file_download.status_code} because '{file_download.reason}'"
+                            )
+                    else:
+                        print(
+                            f"Crowdin is silly and gives a {download.status_code} because '{download.reason}'"
+                        )
+                else:
+                    print(
+                        f"Crowdin is silly and gives a {response.status_code} because '{response.reason}'"
+                    )
             else:
                 print(
                     f"Crowdin is silly and gives a {post.status_code} because '{post.reason}'"
                 )
+        else:
+            print(
+                f"Crowdin is silly and gives a {login_page.status_code} because '{login_page.reason}'"
+            )
 
 
 else:
