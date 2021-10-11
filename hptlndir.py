@@ -411,5 +411,5 @@ else:
     )
     print("Currently available languages:")
     for l in languages:
-        print(l, end=", ")
-        print(" ")
+        print(l + ", ", end="")
+    print(" ")
