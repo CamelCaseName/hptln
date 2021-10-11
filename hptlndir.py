@@ -41,28 +41,26 @@ def convert_files(args):
     files = []
     tnpath = path + "\\converted"
 
-    for root, _, dirfiles in os.walk(path):
+    for root, directories, dirfiles in os.walk(path):
         for name in dirfiles:
             files.append(os.path.join(root, name)[len(path) :])
         for rot in root:
-            if len(re.findall(r"converted", rot + path)) < 1:
-                if not os.path.exists(tnpath + "\\" + root[len(path) :]):
-                    os.makedirs(tnpath + "\\" + root[len(path) :])
+            if not os.path.isdir(tnpath + "\\" + root[len(path) :]):
+                os.makedirs(tnpath + "\\" + root[len(path) :])
 
     if not os.path.isdir(tnpath):
         os.makedirs(tnpath)
 
-    newfile_counter = 0
+    file_counter = 0
+    error_occurred = 0
 
     for person in files:
         f_name, f_ext = os.path.splitext(path + person)
         if f_ext == ".xlsx":
-            newfile_counter += 1
+            file_counter += 1
+            print(".", end="")
             try:
-                print(".", end="")
-                hp = pd.read_excel(
-                    path + person,
-                )
+                hp = pd.read_excel(path + person)
                 hp.drop(hp.columns[1], axis=1, inplace=True)
                 while hp.columns.size > 2:
                     hp.drop(hp.columns[2], axis=1, inplace=True)
@@ -85,7 +83,7 @@ def convert_files(args):
                 )
                 fin = open(f_name + ".txt", "r", encoding="utf-8", errors="ignore")
                 adj_lines = []
-                fin.read()
+                fin.read
                 for lines in fin.readlines():
                     lines = re.sub(r"\|{1}\n", "\n", lines)
                     lines = re.sub(r"\|* *\|", "|", lines)
@@ -95,11 +93,9 @@ def convert_files(args):
                 fout = open(f_name + ".txt", "w", encoding="utf-8")
                 fout.write("\ufeff")
                 fout.writelines(adj_lines)
-                fout.close()
-                error_occurred = 0
             except ValueError:
                 error_occurred = 1
-    print(f"\nConverted {newfile_counter} files!")
+    print(f"\nConverted {file_counter} files!")
     return error_occurred
 
 
@@ -284,7 +280,7 @@ elif len(global_args) > 2:
                         140,
                     ]:
                         download = session.post(
-                            f"https://crowdin.com/backend/project/house-party/de/{i}/export",
+                            f"https://crowdin.com/backend/project/house-party/{lang}/{i}/export",
                             json=download_payload,
                             headers=headers,
                             cookies=download_cookies,
@@ -342,7 +338,7 @@ elif len(global_args) > 2:
                                             os.path.join(dlpath, subpath, language)
                                         )
 
-                                    fout = open(
+                                    dlfout = open(
                                         os.path.join(
                                             dlpath,
                                             subpath,
@@ -362,7 +358,7 @@ elif len(global_args) > 2:
                                     ):
                                         os.makedirs(os.path.join(dlpath, subpath))
 
-                                    fout = open(
+                                    dlfout = open(
                                         os.path.join(
                                             dlpath,
                                             subpath,
@@ -370,7 +366,7 @@ elif len(global_args) > 2:
                                         ),
                                         "wb",
                                     )
-                                fout.write(file_download.content)
+                                dlfout.write(file_download.content)
                             else:
                                 print(
                                     f"Crowdin is silly and gives a {file_download.status_code} because '{file_download.reason}'"
@@ -416,4 +412,5 @@ else:
     )
     print("Currently available languages:")
     for l in languages:
-        print(l)
+        print(l, end=", ")
+        print(" ")
