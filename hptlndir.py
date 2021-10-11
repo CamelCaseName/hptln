@@ -41,10 +41,10 @@ def convert_files(args):
     files = []
     tnpath = path + "\\converted"
 
-    for root, directories, dirfiles in os.walk(path):
+    for root, _, dirfiles in os.walk(path):
         for name in dirfiles:
             files.append(os.path.join(root, name)[len(path) :])
-        for rot in root:
+        for _ in root:
             if not os.path.isdir(tnpath + "\\" + root[len(path) :]):
                 os.makedirs(tnpath + "\\" + root[len(path) :])
 
@@ -83,7 +83,6 @@ def convert_files(args):
                 )
                 fin = open(f_name + ".txt", "r", encoding="utf-8", errors="ignore")
                 adj_lines = []
-                fin.read
                 for lines in fin.readlines():
                     lines = re.sub(r"\|{1}\n", "\n", lines)
                     lines = re.sub(r"\|* *\|", "|", lines)
@@ -128,14 +127,14 @@ if os.path.exists(global_args[1]):
 
 # download first, then convert
 elif len(global_args) > 2:
-    file_counter = 0
+    dfile_counter = 0
     dlpath = global_args[2]
     lang = global_args[1]
 
     if languages.isin([lang]).any():
         language = ""
         if lang == "cs":
-            language == "Czech"
+            language = "Czech"
         elif lang == "da":
             language = "Danish"
         elif lang == "de":
@@ -293,7 +292,7 @@ elif len(global_args) > 2:
                                 file_download_url, headers=headers, cookies=file_cookies
                             )
                             if file_download.status_code == 200:
-                                file_counter += 1
+                                dfile_counter += 1
                                 print(".", end="")
 
                                 subpath = "Languages"
@@ -375,7 +374,7 @@ elif len(global_args) > 2:
                             print(
                                 f"Crowdin is silly and gives a {download.status_code} because '{download.reason}'"
                             )
-                    print(f"\nDownloaded {file_counter} files, converting next")
+                    print(f"\nDownloaded {dfile_counter} files, converting next")
 
                     if convert_files(["easter egg", global_args[2]]):
                         print(
